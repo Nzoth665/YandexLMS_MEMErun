@@ -24,9 +24,10 @@ class Board:
         self.size = self.width, self.height = width, height
         self.indentation = indentation
         self.screen = screen
-        self.limitation = (
-            self.indentation, self.indentation, self.width - 2 * self.indentation, self.height - 2 * self.indentation)
         self.shift = (xshift, yshift)
+        self.limitation = (
+            self.indentation + xshift, self.indentation + yshift, self.width - self.indentation + xshift,
+            self.height - self.indentation + yshift)
 
     def render(self):
         self.screen.fill("#FF0000", (self.shift[0], self.shift[1], self.width, self.height))
@@ -39,16 +40,19 @@ class Board:
             self.indentation + self.shift[0], self.indentation + self.shift[1], self.width - 2 * self.indentation,
             self.height - 2 * self.indentation))
 
-    def item_inside(self, coords):
-        return (self.limitation[0], self.limitation[1]) < coords < (self.limitation[2], self.limitation[3])
+    def item_inside(self, pos, hitbox):
+        return self.limitation[0] < pos[0] and pos[0] + hitbox[0] < self.limitation[2] and self.limitation[1] < pos[
+            1] and pos[1] + hitbox[1] < self.limitation[3]
 
 
 class Entity:
-    def __init__(self, speed, position, health, damage):
+    def __init__(self, speed, position, health, damage, hitbox, board):
         self.speed = speed
         self.position = position
         self.health = health
         self.damage = damage
+        self.hitbox = hitbox
+        self.board = board
         self.image = pygame.Surface([20, 20])
         self.image.fill(pygame.Color("red"))
 
@@ -61,20 +65,37 @@ class Entity:
     def draw(self):
         screen.blit(self.image, self.position)
 
+    # moves
+    def move_up(self):
+        if self.board.item_inside([self.position[0], self.position[1] - self.speed], self.hitbox):
+            self.position[1] -= self.speed
+
+    def move_right(self):
+        if self.board.item_inside([self.position[0] + self.speed, self.position[1]], self.hitbox):
+            self.position[0] += self.speed
+
+    def move_down(self):
+        if self.board.item_inside([self.position[0], self.position[1] + self.speed], self.hitbox):
+            self.position[1] += self.speed
+
+    def move_left(self):
+        if self.board.item_inside([self.position[0] - self.speed, self.position[1]], self.hitbox):
+            self.position[0] -= self.speed
+
 
 class Hero(Entity):
-    def __init__(self, speed, position, health, damage):
-        super().__init__(speed, position, health, damage)
+    def __init__(self, speed, position, health, damage, board):
+        super().__init__(speed, position, health, damage, (20, 20), board)
 
     def move(self):
         if pygame.key.get_pressed()[pygame.K_w]:
-            self.position[1] -= self.speed
+            self.move_up()
         if pygame.key.get_pressed()[pygame.K_a]:
-            self.position[0] -= self.speed
+            self.move_left()
         if pygame.key.get_pressed()[pygame.K_s]:
-            self.position[1] += self.speed
+            self.move_down()
         if pygame.key.get_pressed()[pygame.K_d]:
-            self.position[0] += self.speed
+            self.move_right()
 
 
 wait_for = 0.5
@@ -84,8 +105,8 @@ if __name__ == '__main__':
     size = width, height = 700, 700
     screen = pygame.display.set_mode(size)
 
-    hero = Hero(2, [0, 0], 10, 5)
     board = Board(600, 600, 5, screen, 50, 50)
+    hero = Hero(2, [100, 100], 10, 5, board)
     board.render()
 
     clc = pygame.time.Clock()
