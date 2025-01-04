@@ -1,0 +1,41 @@
+import pygame
+from player import Player
+from Client import Client
+
+pygame.init()  # Инициализируем pygame
+
+HOST, PORT = "localhost", 8080  # Адрес сервера
+
+client = Client((HOST, PORT))  # Создаем объект клиента
+
+sсreen = pygame.display.set_mode((800, 600))  # Создаем окно с разрешением 800x600
+
+clock = pygame.time.Clock()  # Создаем объект для работы со временем внутри игры
+
+while True:
+    for event in pygame.event.get():  # Перебираем все события которые произошли с программой
+        move = []
+        if pygame.key.get_pressed()[pygame.K_w]:
+            move.append("up")
+        if pygame.key.get_pressed()[pygame.K_a]:
+            move.append("left")
+        if pygame.key.get_pressed()[pygame.K_s]:
+            move.append("down")
+        if pygame.key.get_pressed()[pygame.K_d]:
+            move.append("right")
+        client.move(move)
+
+        if event.type == pygame.QUIT:  # Проверяем на выход из игры
+            client.sock.close()
+            exit()
+
+    sсreen.fill((0, 0, 0))  # Заполняем экран черным
+
+    for i in client.players:
+        #print(i)
+        player = Player((i["x"], i["y"]))
+        sсreen.blit(player.image, player.rect)  # Рисуем игрока
+
+    pygame.display.update()  # Обновляем дисплей
+
+    clock.tick(10)  # Ограничиваем частоту кадров игры до 60
