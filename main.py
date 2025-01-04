@@ -45,16 +45,21 @@ class Board:
             1] and pos[1] + hitbox[1] < self.limitation[3]
 
 
-class Entity:
-    def __init__(self, speed, position, health, damage, hitbox, board):
+class Entity(pygame.sprite.Sprite):
+    def __init__(self, speed, position, health, damage, hitbox, board, *group):
+        super().__init__(*group)
+        self.image = pygame.Surface([20, 20])
+        self.image.fill(pygame.Color("red"))
         self.speed = speed
-        self.position = position
+        # self.position = position
         self.health = health
         self.damage = damage
         self.hitbox = hitbox
         self.board = board
-        self.image = pygame.Surface([20, 20])
-        self.image.fill(pygame.Color("red"))
+
+        self.rect = self.image.get_rect()
+        self.rect.x = position[0]
+        self.rect.y = position[1]
 
     def set_image(self, image):
         self.image = load_image(image)
@@ -63,31 +68,31 @@ class Entity:
         self.health -= damage
 
     def draw(self):
-        screen.blit(self.image, self.position)
+        screen.blit(self.image, (self.rect.x, self.rect.y))
 
     # moves
     def move_up(self):
-        if self.board.item_inside([self.position[0], self.position[1] - self.speed], self.hitbox):
-            self.position[1] -= self.speed
+        if self.board.item_inside([self.rect.x, self.rect.y - self.speed], self.hitbox):
+            self.rect.y -= self.speed
 
     def move_right(self):
-        if self.board.item_inside([self.position[0] + self.speed, self.position[1]], self.hitbox):
-            self.position[0] += self.speed
+        if self.board.item_inside([self.rect.x + self.speed, self.rect.y], self.hitbox):
+            self.rect.x += self.speed
 
     def move_down(self):
-        if self.board.item_inside([self.position[0], self.position[1] + self.speed], self.hitbox):
-            self.position[1] += self.speed
+        if self.board.item_inside([self.rect.x, self.rect.y + self.speed], self.hitbox):
+            self.rect.y += self.speed
 
     def move_left(self):
-        if self.board.item_inside([self.position[0] - self.speed, self.position[1]], self.hitbox):
-            self.position[0] -= self.speed
+        if self.board.item_inside([self.rect.x - self.speed, self.rect.y], self.hitbox):
+            self.rect.x -= self.speed
 
 
 class Hero(Entity):
-    def __init__(self, speed, position, health, damage, board):
-        super().__init__(speed, position, health, damage, (20, 20), board)
+    def __init__(self, speed, position, health, damage, board, *group):
+        super().__init__(speed, position, health, damage, (20, 20), board, *group)
 
-    def move(self):
+    def update(self):
         if pygame.key.get_pressed()[pygame.K_w]:
             self.move_up()
         if pygame.key.get_pressed()[pygame.K_a]:
@@ -101,12 +106,14 @@ class Hero(Entity):
 wait_for = 0.5
 if __name__ == '__main__':
     pygame.init()
-    pygame.display.set_caption('game')
+    pygame.display.set_caption('MEMErun')
     size = width, height = 700, 700
     screen = pygame.display.set_mode(size)
 
+    all_sprites = pygame.sprite.Group()
+
     board = Board(600, 600, 5, screen, 50, 50)
-    hero = Hero(2, [100, 100], 10, 5, board)
+    hero = Hero(2, [100, 100], 10, 5, board, all_sprites)
     board.render()
 
     clc = pygame.time.Clock()
@@ -116,9 +123,10 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        hero.move()
+        all_sprites.update()
         board.clear()
-        hero.draw()
+        all_sprites.draw(screen)
+
         pygame.display.flip()
         clc.tick(120)
     pygame.quit()
