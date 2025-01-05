@@ -4,7 +4,7 @@ import sys
 
 
 def load_image(name, colorkey=None):
-    fullname = os.path.join('data', name)
+    fullname = os.path.join('images', name)
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
@@ -30,13 +30,13 @@ class Board:
             self.height - self.indentation + yshift)
 
     def render(self):
-        self.screen.fill("#FF0000", (self.shift[0], self.shift[1], self.width, self.height))
-        self.screen.fill("#00FF00", (
+        self.screen.fill("#B22222", (self.shift[0], self.shift[1], self.width, self.height)) # кирпичный
+        self.screen.fill("#FFCC00", (
             self.indentation + self.shift[0], self.indentation + self.shift[1], self.width - 2 * self.indentation,
-            self.height - 2 * self.indentation))
+            self.height - 2 * self.indentation)) # цвет Яндекс
 
     def clear(self):
-        self.screen.fill("#00FF00", (
+        self.screen.fill("#FFCC00", (
             self.indentation + self.shift[0], self.indentation + self.shift[1], self.width - 2 * self.indentation,
             self.height - 2 * self.indentation))
 
@@ -46,15 +46,15 @@ class Board:
 
 
 class Entity(pygame.sprite.Sprite):
-    def __init__(self, speed, position, health, damage, hitbox, board, *group):
+    def __init__(self, speed, position, health, damage, hitbox, board, image, *group):
         super().__init__(*group)
-        self.image = pygame.Surface([20, 20])
-        self.image.fill(pygame.Color("red"))
+        self.image = pygame.transform.scale(load_image(image), (40, 40))
+        #self.image.fill(pygame.Color("red"))
         self.speed = speed
         # self.position = position
         self.health = health
         self.damage = damage
-        self.hitbox = hitbox
+        #self.hitbox = hitbox
         self.board = board
 
         self.rect = self.image.get_rect()
@@ -72,25 +72,25 @@ class Entity(pygame.sprite.Sprite):
 
     # moves
     def move_up(self):
-        if self.board.item_inside([self.rect.x, self.rect.y - self.speed], self.hitbox):
+        if self.board.item_inside([self.rect.x, self.rect.y - self.speed], (self.rect.width, self.rect.height)):
             self.rect.y -= self.speed
 
     def move_right(self):
-        if self.board.item_inside([self.rect.x + self.speed, self.rect.y], self.hitbox):
+        if self.board.item_inside([self.rect.x + self.speed, self.rect.y], (self.rect.width, self.rect.height)):
             self.rect.x += self.speed
 
     def move_down(self):
-        if self.board.item_inside([self.rect.x, self.rect.y + self.speed], self.hitbox):
+        if self.board.item_inside([self.rect.x, self.rect.y + self.speed], (self.rect.width, self.rect.height)):
             self.rect.y += self.speed
 
     def move_left(self):
-        if self.board.item_inside([self.rect.x - self.speed, self.rect.y], self.hitbox):
+        if self.board.item_inside([self.rect.x - self.speed, self.rect.y], (self.rect.width, self.rect.height)):
             self.rect.x -= self.speed
 
 
 class Hero(Entity):
     def __init__(self, speed, position, health, damage, board, *group):
-        super().__init__(speed, position, health, damage, (20, 20), board, *group)
+        super().__init__(speed, position, health, damage, (20, 20), board, "hero.png", *group)
 
     def update(self):
         if pygame.key.get_pressed()[pygame.K_w]:
@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     all_sprites = pygame.sprite.Group()
 
-    board = Board(600, 600, 5, screen, 50, 50)
+    board = Board(600, 600, 10, screen, 50, 50)
     hero = Hero(2, [100, 100], 10, 5, board, all_sprites)
     board.render()
 
