@@ -48,9 +48,9 @@ class Board:
 
 
 class Entity(pygame.sprite.Sprite):
-    def __init__(self, speed, position, health, damage, hitbox, board, image, *group):
+    def __init__(self, speed, position, health, damage, board, image, *group):
         super().__init__(*group)
-        self.image = pygame.transform.scale(load_image(image), (45, 45))
+        self.image = load_image(image)
         self.speed = speed
         self.health = health
         self.damage = damage
@@ -91,7 +91,11 @@ class Entity(pygame.sprite.Sprite):
 
 class Hero(Entity):
     def __init__(self, speed, position, health, damage, board, *group):
-        super().__init__(speed, position, health, damage, (20, 20), board, "hero.png", *group)
+        super().__init__(speed, position, health, damage, board, "hero.png", *group)
+        self.image = pygame.transform.scale(self.image, (45, 45))
+        self.rect = self.image.get_rect()
+        self.rect.x = position[0]
+        self.rect.y = position[1]
         self.weapon = []
         self.maxCountWeapons = 2
         self.spellRecharge = 0
@@ -106,7 +110,7 @@ class Hero(Entity):
         if pygame.key.get_pressed()[pygame.K_d]:
             self.move_right()
         self.spellRecharge -= 1
-        self.health -= 1
+        #self.health -= 1
         if self.health == 0:
             self.kill()
 
@@ -128,7 +132,7 @@ if __name__ == '__main__':
     all_sprites = pygame.sprite.Group()
 
     board = Board(700, 600, 10, screen, 50, 50)
-    hero = Priest(2, [100, 100], 1000, 5, board, all_sprites)
+    hero = Dodger(2, [100, 100], 1000, 5, board, all_sprites)
     board.render()
 
     clc = pygame.time.Clock()
