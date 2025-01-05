@@ -30,10 +30,10 @@ class Board:
             self.height - self.indentation + yshift)
 
     def render(self):
-        self.screen.fill("#B22222", (self.shift[0], self.shift[1], self.width, self.height)) # кирпичный
+        self.screen.fill("#B22222", (self.shift[0], self.shift[1], self.width, self.height))  # кирпичный
         self.screen.fill("#FFCC00", (
             self.indentation + self.shift[0], self.indentation + self.shift[1], self.width - 2 * self.indentation,
-            self.height - 2 * self.indentation)) # цвет Яндекс
+            self.height - 2 * self.indentation))  # цвет Яндекс
 
     def clear(self):
         self.screen.fill("#FFCC00", (
@@ -48,13 +48,13 @@ class Board:
 class Entity(pygame.sprite.Sprite):
     def __init__(self, speed, position, health, damage, hitbox, board, image, *group):
         super().__init__(*group)
-        self.image = pygame.transform.scale(load_image(image), (40, 40))
-        #self.image.fill(pygame.Color("red"))
+        self.image = pygame.transform.scale(load_image(image), (45, 45))
+        # self.image.fill(pygame.Color("red"))
         self.speed = speed
         # self.position = position
         self.health = health
         self.damage = damage
-        #self.hitbox = hitbox
+        # self.hitbox = hitbox
         self.board = board
 
         self.rect = self.image.get_rect()
@@ -91,6 +91,9 @@ class Entity(pygame.sprite.Sprite):
 class Hero(Entity):
     def __init__(self, speed, position, health, damage, board, *group):
         super().__init__(speed, position, health, damage, (20, 20), board, "hero.png", *group)
+        self.weapon = []
+        self.maxCountWeapons = 2
+        self.spellRecharge = 0
 
     def update(self):
         if pygame.key.get_pressed()[pygame.K_w]:
@@ -101,6 +104,32 @@ class Hero(Entity):
             self.move_down()
         if pygame.key.get_pressed()[pygame.K_d]:
             self.move_right()
+        self.spellRecharge -= 1
+
+    def change_weapons(self):
+        if len(self.weapon) > 1:
+            self.weapon = self.weapon[1:] + self.weapon[0]
+
+    def attack(self):
+        if len(self.weapon) != 0:
+            self.weapon.shot()
+
+    def spell(self):
+        if self.spellRecharge <= 0:
+            if pygame.key.get_pressed()[pygame.K_w]:
+                for _ in range(30):
+                    self.move_up()
+            if pygame.key.get_pressed()[pygame.K_a]:
+                for _ in range(30):
+                    self.move_left()
+            if pygame.key.get_pressed()[pygame.K_s]:
+                for _ in range(30):
+                    self.move_down()
+            if pygame.key.get_pressed()[pygame.K_d]:
+                for _ in range(30):
+                    self.move_right()
+            self.spellRecharge = 120
+
 
 
 wait_for = 0.5
@@ -123,6 +152,9 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    hero.spell()
         all_sprites.update()
         board.clear()
         all_sprites.draw(screen)
