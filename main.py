@@ -2,6 +2,8 @@ import pygame
 import os
 import sys
 
+from classes import *
+
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('images', name)
@@ -49,13 +51,12 @@ class Entity(pygame.sprite.Sprite):
     def __init__(self, speed, position, health, damage, hitbox, board, image, *group):
         super().__init__(*group)
         self.image = pygame.transform.scale(load_image(image), (45, 45))
-        # self.image.fill(pygame.Color("red"))
         self.speed = speed
-        # self.position = position
         self.health = health
         self.damage = damage
-        # self.hitbox = hitbox
         self.board = board
+
+        self.max_health = health
 
         self.rect = self.image.get_rect()
         self.rect.x = position[0]
@@ -67,8 +68,8 @@ class Entity(pygame.sprite.Sprite):
     def get_hit(self, damage):
         self.health -= damage
 
-    def draw(self):
-        screen.blit(self.image, (self.rect.x, self.rect.y))
+    # def draw(self):
+    #    screen.blit(self.image, (self.rect.x, self.rect.y))
 
     # moves
     def move_up(self):
@@ -105,44 +106,29 @@ class Hero(Entity):
         if pygame.key.get_pressed()[pygame.K_d]:
             self.move_right()
         self.spellRecharge -= 1
+        self.health -= 1
+        if self.health == 0:
+            self.kill()
 
-    def change_weapons(self):
+    def change_weapon(self):
         if len(self.weapon) > 1:
             self.weapon = self.weapon[1:] + self.weapon[0]
 
     def attack(self):
         if len(self.weapon) != 0:
-            self.weapon.shot()
-
-    def spell(self):
-        if self.spellRecharge <= 0:
-            if pygame.key.get_pressed()[pygame.K_w]:
-                for _ in range(30):
-                    self.move_up()
-            if pygame.key.get_pressed()[pygame.K_a]:
-                for _ in range(30):
-                    self.move_left()
-            if pygame.key.get_pressed()[pygame.K_s]:
-                for _ in range(30):
-                    self.move_down()
-            if pygame.key.get_pressed()[pygame.K_d]:
-                for _ in range(30):
-                    self.move_right()
-            self.spellRecharge = 120
+            self.weapon[0].shot()
 
 
-
-wait_for = 0.5
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('MEMErun')
-    size = width, height = 700, 700
+    size = width, height = 800, 700
     screen = pygame.display.set_mode(size)
 
     all_sprites = pygame.sprite.Group()
 
-    board = Board(600, 600, 10, screen, 50, 50)
-    hero = Hero(2, [100, 100], 10, 5, board, all_sprites)
+    board = Board(700, 600, 10, screen, 50, 50)
+    hero = Priest(2, [100, 100], 1000, 5, board, all_sprites)
     board.render()
 
     clc = pygame.time.Clock()
@@ -155,6 +141,8 @@ if __name__ == '__main__':
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     hero.spell()
+        screen.fill("#444444", (0, 680, 500, 20))
+        screen.fill("#FF0000", (0, 680, hero.health * (500 / hero.max_health), 20))
         all_sprites.update()
         board.clear()
         all_sprites.draw(screen)
